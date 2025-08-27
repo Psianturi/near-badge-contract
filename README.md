@@ -1,83 +1,25 @@
-# Hello NEAR Contract
+# NEAR Badge - Smart Contract
 
-The smart contract exposes two methods to enable storing and retrieving a greeting in the NEAR network.
+A simple and powerful Proof of Attendance Protocol (POAP) for the NEAR ecosystem. This repository contains the core smart contract logic for the NEAR Badge project.
 
-```ts
-@NearBindgen({})
-class HelloNear {
-  greeting: string = "Hello";
+## The Problem
+Rewarding community participation is vital for ecosystem growth. However, current methods for airdropping assets like POAPs are often cumbersome for event organizers. The process of manually collecting and verifying hundreds of wallet addresses is a significant point of friction and a barrier to adoption for non-technical community managers.
 
-  @view // This method is read-only and can be called for free
-  get_greeting(): string {
-    return this.greeting;
-  }
+## Our Solution: The "Magic Link" Flow
+NEAR Badge is designed with simplicity as its core principle. We solve the problem using a "Magic Link" flow:
 
-  @call // This method changes the state, for which it cost gas
-  set_greeting({ greeting }: { greeting: string }): void {
-    // Record a log permanently to the blockchain!
-    near.log(`Saving greeting ${greeting}`);
-    this.greeting = greeting;
-  }
-}
-```
+1.  **Create Event:** An organizer calls the `create_event` function on the contract.
+2.  **Upload Emails:** A simple script allows the organizer to upload a CSV of attendee emails (data they already have from platforms like Luma, Zoom, etc.).
+3.  **Claim Badge:** Attendees receive a unique link. They simply click it, connect their wallet, verify ownership of their email, and claim their NFT badge.
 
-<br />
+This process removes the need for organizers to ever handle wallet addresses directly, making it incredibly easy to adopt.
 
-# Quickstart
+## Current Status & Live Demo (Testnet)
+- ✅ **Deployed to Testnet:** The initial version of the contract is live.
+- **Contract Address:** `nearbadge-contract.testnet`
 
-1. Make sure you have installed [node.js](https://nodejs.org/en/download/package-manager/) >= 16.
-2. Install the [`NEAR CLI`](https://github.com/near/near-cli#setup)
+You can interact with the deployed contract directly via the NEAR CLI.
 
-<br />
-
-## 1. Build and Test the Contract
-You can automatically compile and test the contract by running:
-
+**1. Create a New Event:**
 ```bash
-npm run build
-```
-
-<br />
-
-## 2. Create an Account and Deploy the Contract
-You can create a new account and deploy the contract by running:
-
-```bash
-near create-account <your-account.testnet> --useFaucet
-near deploy <your-account.testnet> build/release/hello_near.wasm
-```
-
-<br />
-
-
-## 3. Retrieve the Greeting
-
-`get_greeting` is a read-only method (aka `view` method).
-
-`View` methods can be called for **free** by anyone, even people **without a NEAR account**!
-
-```bash
-# Use near-cli to get the greeting
-near view <your-account.testnet> get_greeting
-```
-
-<br />
-
-## 4. Store a New Greeting
-`set_greeting` changes the contract's state, for which it is a `call` method.
-
-`Call` methods can only be invoked using a NEAR account, since the account needs to pay GAS for the transaction.
-
-```bash
-# Use near-cli to set a new greeting
-near call <your-account.testnet> set_greeting '{"greeting":"howdy"}' --accountId <your-account.testnet>
-```
-
-**Tip:** If you would like to call `set_greeting` using another account, first login into NEAR using:
-
-```bash
-# Use near-cli to login your NEAR account
-near login
-```
-
-and then use the logged account to sign the transaction: `--accountId <another-account>`.
+near call badge-dev.testnet create_event '{"name": "My First Community Call", "description": "A test event for our new badge system!"}' --accountId YOUR_ACCOUNT.testnet
