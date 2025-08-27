@@ -1,4 +1,4 @@
-// Import all the necessary components from near-sdk-js
+
 import {
   NearBindgen,
   near,
@@ -18,7 +18,7 @@ class Event {
 // The main class for our smart contract
 @NearBindgen({})
 class BadgeContract {
-  // The account ID of the contract owner. Initialized with an empty string.
+
   owner: string = "";
 
   // A map to store all events. 
@@ -35,8 +35,8 @@ class BadgeContract {
     // Use 'assert' to make sure this function is called only once
     assert(!this.initialized, "Contract is already initialized");
 
-    this.owner = near.predecessorAccountId(); // Set the contract owner
-    this.initialized = true; // Set the flag to true after initialization
+    this.owner = near.predecessorAccountId(); 
+    this.initialized = true; 
   }
 
   // @call method to create a new event
