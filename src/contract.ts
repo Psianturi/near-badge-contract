@@ -29,6 +29,14 @@ export class JsonToken {
   metadata: TokenMetadata;
 }
 
+// NEW: Contract-level Metadata Structure (NEP-177)
+export class NFTContractMetadata {
+  spec: string = "nft-1.0.0";
+  name: string = "NEAR Badge POAPs";
+  symbol: string = "POAP";
+  icon: string | null = null; // Opsional
+}
+
 class Event {
   organizer: string;
   name: string;
@@ -41,6 +49,7 @@ class Event {
  * Contract
  */
 @NearBindgen({})
+
 class BadgeContract {
   // Admin/Owner
   owner: string = "";
@@ -55,8 +64,13 @@ class BadgeContract {
   token_metadata_by_id: UnorderedMap<TokenMetadata> = new UnorderedMap("m");
   token_id_counter: bigint = BigInt(0);
 
+
+  // --- NEW: Contract-level metadata storage ---
+  metadata: NFTContractMetadata = new NFTContractMetadata();
+  
   // Init flag
   initialized: boolean = false;
+  
 
   /* --------------------
      Initialization
@@ -241,4 +255,22 @@ class BadgeContract {
     }
     return json_tokens;
   }
+
+    // --- NEW: NEP-177 Contract Metadata function ---
+  @view({})
+  nft_metadata(): NFTContractMetadata {
+    if (this.metadata) {
+      return this.metadata;
+    }
+
+    // Default fallback metadata
+    return {
+      spec: "nft-1.0.0",
+      name: "NEAR Badge POAPs",
+      symbol: "POAP",
+      icon: null,
+    };
+  }
+
+
 }
