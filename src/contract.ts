@@ -103,6 +103,11 @@ class BadgeContract {
     return this.owner === account_id;
   }
 
+  @view({})
+  get_organizers(): string[] {
+    return this.organizers.toArray();
+  }
+
   /* --------------------
      Event lifecycle: create, whitelist
      -------------------- */
