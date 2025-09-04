@@ -201,19 +201,22 @@ class BadgeContract {
 
     this.token_id_counter = this.token_id_counter + BigInt(1);
   }
-
+  
   internal_add_token_to_owner(account_id: string, token_id: string): void {
-    let tokens_set = this.tokens_per_owner.get(account_id);
-    if (tokens_set === null) {
-      tokens_set = new UnorderedSet(`o:${account_id}`);
-    }
-    tokens_set.set(token_id);
-    this.tokens_per_owner.set(account_id, tokens_set);
+  let tokens_set = this.tokens_per_owner.get(account_id);
+
+  if (tokens_set === null) {
+    tokens_set = new UnorderedSet(`o:${account_id}`);
+  } else {
+    // sudah pernah ada di storage: reconstruct agar punya method .set()
+    tokens_set = UnorderedSet.reconstruct(tokens_set);
   }
 
-  /* --------------------
-     Views
-     -------------------- */
+  tokens_set.set(token_id);
+  this.tokens_per_owner.set(account_id, tokens_set);
+}
+
+
   @view({})
   get_event({ name }: { name: string }): Event | null {
     assert(this.initialized, "Contract must be initialized first");
@@ -275,6 +278,25 @@ class BadgeContract {
       symbol: "POAP",
       icon: null,
     };
+  }
+
+
+  
+  @call({})
+  delete_event({ event_name }: { event_name: string }): void {
+    assert(this.initialized, "Contract must be initialized first");
+
+    const eventData = this.events.get(event_name);
+    assert(eventData !== null, "Event not found");
+
+    const predecessor = near.predecessorAccountId();
+    // Security: Only the event organizer or the contract owner can delete an event
+    assert(
+      predecessor === eventData.organizer || predecessor === this.owner,
+      "Only the event organizer or contract owner can delete this event"
+    );
+
+    this.events.remove(event_name);
   }
 
 
