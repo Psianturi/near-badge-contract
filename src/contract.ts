@@ -173,7 +173,7 @@ class BadgeContract {
     const metadata: TokenMetadata = {
       title: eventData.name,
       description: eventData.description,
-      media: "https://bafybeiftczwrtyr3k7a2k4vutd3amkwsmaqkpbvr3azdlk2qx4vtsoi4u4.ipfs.nftstorage.link/",
+      media: "https://gateway.lighthouse.storage/ipfs/bafkreidybqjfxxhbfnkcsfn5yzhyyvv4dg4nbijao3w5wazlshixoyipyu",
       issued_at: near.blockTimestamp().toString(),
     };
 

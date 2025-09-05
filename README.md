@@ -57,21 +57,39 @@ The process of manually collecting and verifying hundreds of wallet addresses is
 
 ---
 
-
 ## 🛠️ CLI Usage Examples
 
 You can test the full workflow directly via the **NEAR CLI**.
 
-### Command script
-```bash
+### Full Command Script (Step-by-Step)
 
+1. **Build the contract**
+   ```bash
+   npm run build
+
+2. **Add an organizer**
+  ```bash
 near call near-badge.testnet add_organizer \
   '{"account_id": "ORGANIZER_ACCOUNT.testnet"}' \
   --accountId near-badge.testnet
 
-near call near-badge.testnet create_event '{"name": "My Test Event", "description": "A cool event"}' --accountId ORGANIZER_ACCOUNT.testnet
+3. **Create an event**
+  ```bash
+  near call near-badge.testnet create_event \
+  '{"name": "My Test Event", "description": "A cool event"}' \
+  --accountId ORGANIZER_ACCOUNT.testnet
 
-near call near-badge.testnet add_to_whitelist '{"event_name": "My Test Event", "account_ids": ["ATTENDEE_1.testnet", "ATTENDEE_2.testnet"]}' --accountId ORGANIZER_ACCOUNT.testnet
+4. **Add attendees to whitelist**
+  ```bash
+  near call near-badge.testnet add_to_whitelist \
+  '{"event_name": "My Test Event", "account_ids": ["ATTENDEE_1.testnet", "ATTENDEE_2.testnet"]}' \
+  --accountId ORGANIZER_ACCOUNT.testnet
 
-near call near-badge.testnet claim_badge '{"event_name": "My Test Event"}' --accountId ATTENDEE_1.testnet --deposit 0.1
+5. **Claim a badge (as attendee)**
+  ```bash
+  near call near-badge.testnet claim_badge \
+  '{"event_name": "My Test Event"}' \
+  --accountId ATTENDEE_1.testnet \
+  --deposit 0.1
+
 
