@@ -37,7 +37,6 @@ The process of manually collecting and verifying hundreds of wallet addresses is
 ## 🌐 Live on Testnet
 - ✅ **Status:** Deployed and fully functional on NEAR Testnet.  
 - **Latest Deployment TX:** [View on Explorer](https://explorer.testnet.near.org/transactions/9nNsSeysRHcmdB2dUG4iRfobkaKT5dyfm2wZuPNrYFcB)  
-- **Contract Account:** [`near-badge.testnet`](https://explorer.testnet.near.org/accounts/near-badge.testnet)
 
 ---
 
@@ -70,26 +69,26 @@ You can test the full workflow directly via the **NEAR CLI**.
 2. **Add an organizer**
    ```bash
    near call near-badge.testnet add_organizer \
-  '{"account_id": "ORGANIZER_ACCOUNT.testnet"}' \
-  --accountId near-badge.testnet
+   '{"account_id": "ORGANIZER_ACCOUNT.testnet"}' \
+   --accountId near-badge.testnet
 
 3. **Create an event**
    ```bash
    near call near-badge.testnet create_event \
-  '{"name": "My Test Event", "description": "A cool event"}' \
-  --accountId ORGANIZER_ACCOUNT.testnet
+    '{"name": "My Test Event", "description": "A cool event"}' \
+    --accountId ORGANIZER_ACCOUNT.testnet
 
 4. **Add attendees to whitelist**
    ```bash
    near call near-badge.testnet add_to_whitelist \
-  '{"event_name": "My Test Event", "account_ids": ["ATTENDEE_1.testnet", "ATTENDEE_2.testnet"]}' \
-  --accountId ORGANIZER_ACCOUNT.testnet
+    '{"event_name": "My Test Event", "account_ids": ["ATTENDEE_1.testnet", "ATTENDEE_2.testnet"]}' \
+    --accountId ORGANIZER_ACCOUNT.testnet
 
 5. **Claim a badge (as attendee)**
    ```bash
    near call near-badge.testnet claim_badge \
-  '{"event_name": "My Test Event"}' \
-  --accountId ATTENDEE_1.testnet \
-  --deposit 0.1
+    '{"event_name": "My Test Event"}' \
+    --accountId ATTENDEE_1.testnet \
+    --deposit 0.1
 
 
