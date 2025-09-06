@@ -49,7 +49,6 @@ class Event {
  * Contract
  */
 @NearBindgen({})
-
 class BadgeContract {
   // Admin/Owner
   owner: string = "";
@@ -57,6 +56,7 @@ class BadgeContract {
   // Events and roles
   events: UnorderedMap<Event> = new UnorderedMap("events");
   organizers: UnorderedSet<string> = new UnorderedSet("organizers");
+  admins: UnorderedSet<string> = new UnorderedSet("admins"); // ✅ Daftar admin
 
   // NFT storage
   tokens_by_id: UnorderedMap<Token> = new UnorderedMap("t");
@@ -64,13 +64,11 @@ class BadgeContract {
   token_metadata_by_id: UnorderedMap<TokenMetadata> = new UnorderedMap("m");
   token_id_counter: bigint = BigInt(0);
 
+  // --- Contract-level metadata ---
+  metadata: NFTContractMetadata = new NFTContractMetadata(); // ✅ Fixed: pakai 'metadata'
 
-  // --- NEW: Contract-level metadata storage ---
-  metadata: NFTContractMetadata = new NFTContractMetadata();
-  
   // Init flag
   initialized: boolean = false;
-  
 
   /* --------------------
      Initialization
@@ -86,10 +84,26 @@ class BadgeContract {
      Admin / Organizer management
      -------------------- */
   @call({})
+  add_admin({ account_id }: { account_id: string }): void {
+    assert(this.initialized, "Contract must be initialized first");
+    const predecessor = near.predecessorAccountId();
+    assert(predecessor === this.owner, "Only the owner can add admins");
+    this.admins.set(account_id);
+  }
+
+  @view({})
+  is_admin({ account_id }: { account_id: string }): boolean {
+    return this.admins.contains(account_id);
+  }
+
+  @call({})
   add_organizer({ account_id }: { account_id: string }): void {
     assert(this.initialized, "Contract must be initialized first");
     const predecessor = near.predecessorAccountId();
-    assert(predecessor === this.owner, "Only the owner can add organizers");
+    assert(
+      predecessor === this.owner || this.admins.contains(predecessor),
+      "Only the owner or an admin can add organizers"
+    );
     this.organizers.set(account_id);
   }
 
@@ -108,6 +122,11 @@ class BadgeContract {
     return this.organizers.toArray();
   }
 
+  @view({})
+  get_admins(): string[] {
+    return this.admins.toArray();
+  }
+
   /* --------------------
      Event lifecycle: create, whitelist
      -------------------- */
@@ -121,7 +140,6 @@ class BadgeContract {
       "Only the owner or an authorized organizer can create events"
     );
 
-    // Prevent duplicate event by name
     assert(this.events.get(name) === null, "Event with that name already exists");
 
     const ev: Event = {
@@ -201,21 +219,19 @@ class BadgeContract {
 
     this.token_id_counter = this.token_id_counter + BigInt(1);
   }
-  
+
   internal_add_token_to_owner(account_id: string, token_id: string): void {
-  let tokens_set = this.tokens_per_owner.get(account_id);
+    let tokens_set = this.tokens_per_owner.get(account_id);
 
-  if (tokens_set === null) {
-    tokens_set = new UnorderedSet(`o:${account_id}`);
-  } else {
-    // sudah pernah ada di storage: reconstruct agar punya method .set()
-    tokens_set = UnorderedSet.reconstruct(tokens_set);
+    if (tokens_set === null) {
+      tokens_set = new UnorderedSet(`o:${account_id}`);
+    } else {
+      tokens_set = UnorderedSet.reconstruct(tokens_set);
+    }
+
+    tokens_set.set(token_id);
+    this.tokens_per_owner.set(account_id, tokens_set);
   }
-
-  tokens_set.set(token_id);
-  this.tokens_per_owner.set(account_id, tokens_set);
-}
-
 
   @view({})
   get_event({ name }: { name: string }): Event | null {
@@ -264,15 +280,11 @@ class BadgeContract {
     return json_tokens;
   }
 
-    // --- NEW: NEP-177 Contract Metadata function ---
+  // --- NEP-177: Contract Metadata ---
   @view({})
   nft_metadata(): NFTContractMetadata {
-    if (this.metadata) {
-      return this.metadata;
-    }
-
-    // Default fallback metadata
-    return {
+    // ✅ Fixed: return metadata if exists
+    return this.metadata || {
       spec: "nft-1.0.0",
       name: "NEAR Badge POAPs",
       symbol: "POAP",
@@ -280,8 +292,6 @@ class BadgeContract {
     };
   }
 
-
-  
   @call({})
   delete_event({ event_name }: { event_name: string }): void {
     assert(this.initialized, "Contract must be initialized first");
@@ -290,7 +300,6 @@ class BadgeContract {
     assert(eventData !== null, "Event not found");
 
     const predecessor = near.predecessorAccountId();
-    // Security: Only the event organizer or the contract owner can delete an event
     assert(
       predecessor === eventData.organizer || predecessor === this.owner,
       "Only the event organizer or contract owner can delete this event"
@@ -298,6 +307,4 @@ class BadgeContract {
 
     this.events.remove(event_name);
   }
-
-
 }
