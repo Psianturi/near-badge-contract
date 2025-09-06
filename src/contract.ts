@@ -56,7 +56,9 @@ class BadgeContract {
   // Events and roles
   events: UnorderedMap<Event> = new UnorderedMap("events");
   organizers: UnorderedSet<string> = new UnorderedSet("organizers");
-  admins: UnorderedSet<string> = new UnorderedSet("admins"); // ✅ Daftar admin
+  
+  // ✅ Tambahkan: manager (hanya untuk tambah organizer)
+  managers: UnorderedSet<string> = new UnorderedSet("managers");
 
   // NFT storage
   tokens_by_id: UnorderedMap<Token> = new UnorderedMap("t");
@@ -65,7 +67,7 @@ class BadgeContract {
   token_id_counter: bigint = BigInt(0);
 
   // --- Contract-level metadata ---
-  metadata: NFTContractMetadata = new NFTContractMetadata(); // ✅ Fixed: pakai 'metadata'
+  metadata: NFTContractMetadata = new NFTContractMetadata();
 
   // Init flag
   initialized: boolean = false;
@@ -78,31 +80,37 @@ class BadgeContract {
     assert(!this.initialized, "Contract is already initialized");
     this.owner = near.predecessorAccountId();
     this.initialized = true;
+
+    // ✅ Owner otomatis jadi manager (biar bisa tambah organizer)
+    // Tapi tetap jadi owner — tidak ada perubahan role
+    this.managers.set(this.owner);
   }
 
   /* --------------------
-     Admin / Organizer management
+     Manager / Organizer management
      -------------------- */
   @call({})
-  add_admin({ account_id }: { account_id: string }): void {
+  add_manager({ account_id }: { account_id: string }): void {
     assert(this.initialized, "Contract must be initialized first");
     const predecessor = near.predecessorAccountId();
-    assert(predecessor === this.owner, "Only the owner can add admins");
-    this.admins.set(account_id);
+    assert(predecessor === this.owner, "Only the owner can add managers");
+    this.managers.set(account_id);
   }
 
   @view({})
-  is_admin({ account_id }: { account_id: string }): boolean {
-    return this.admins.contains(account_id);
+  is_manager({ account_id }: { account_id: string }): boolean {
+    return this.managers.contains(account_id);
   }
 
   @call({})
   add_organizer({ account_id }: { account_id: string }): void {
     assert(this.initialized, "Contract must be initialized first");
     const predecessor = near.predecessorAccountId();
+    
+    // ✅ Hanya owner atau manager yang bisa tambah organizer
     assert(
-      predecessor === this.owner || this.admins.contains(predecessor),
-      "Only the owner or an admin can add organizers"
+      predecessor === this.owner || this.managers.contains(predecessor),
+      "Only the owner or a manager can add organizers"
     );
     this.organizers.set(account_id);
   }
@@ -123,8 +131,8 @@ class BadgeContract {
   }
 
   @view({})
-  get_admins(): string[] {
-    return this.admins.toArray();
+  get_managers(): string[] {
+    return this.managers.toArray();
   }
 
   /* --------------------
@@ -283,7 +291,6 @@ class BadgeContract {
   // --- NEP-177: Contract Metadata ---
   @view({})
   nft_metadata(): NFTContractMetadata {
-    // ✅ Fixed: return metadata if exists
     return this.metadata || {
       spec: "nft-1.0.0",
       name: "NEAR Badge POAPs",
