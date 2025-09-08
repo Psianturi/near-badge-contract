@@ -29,18 +29,19 @@ export class JsonToken {
   metadata: TokenMetadata;
 }
 
-// NEW: Contract-level Metadata Structure (NEP-177)
 export class NFTContractMetadata {
   spec: string = "nft-1.0.0";
   name: string = "NEAR Badge POAPs";
   symbol: string = "POAP";
-  icon: string | null = null; // Opsional
+  icon: string | null = null;
 }
 
 class Event {
   organizer: string;
   name: string;
   description: string;
+  //  URL gambar badge
+  media: string;
   whitelist: UnorderedSet<string>;
   claimed: UnorderedSet<string>;
 }
@@ -56,8 +57,6 @@ class BadgeContract {
   // Events and roles
   events: UnorderedMap<Event> = new UnorderedMap("events");
   organizers: UnorderedSet<string> = new UnorderedSet("organizers");
-  
-  // ✅ Tambahkan: manager (hanya untuk tambah organizer)
   managers: UnorderedSet<string> = new UnorderedSet("managers");
 
   // NFT storage
@@ -80,9 +79,6 @@ class BadgeContract {
     assert(!this.initialized, "Contract is already initialized");
     this.owner = near.predecessorAccountId();
     this.initialized = true;
-
-    // ✅ Owner otomatis jadi manager (biar bisa tambah organizer)
-    // Tapi tetap jadi owner — tidak ada perubahan role
     this.managers.set(this.owner);
   }
 
@@ -106,8 +102,6 @@ class BadgeContract {
   add_organizer({ account_id }: { account_id: string }): void {
     assert(this.initialized, "Contract must be initialized first");
     const predecessor = near.predecessorAccountId();
-    
-    // ✅ Hanya owner atau manager yang bisa tambah organizer
     assert(
       predecessor === this.owner || this.managers.contains(predecessor),
       "Only the owner or a manager can add organizers"
@@ -139,7 +133,7 @@ class BadgeContract {
      Event lifecycle: create, whitelist
      -------------------- */
   @call({})
-  create_event({ name, description }: { name: string; description: string }): void {
+  create_event({ name, description, media }: { name: string; description: string; media: string }): void {
     assert(this.initialized, "Contract must be initialized first");
     const predecessor = near.predecessorAccountId();
 
@@ -154,6 +148,8 @@ class BadgeContract {
       organizer: predecessor,
       name,
       description,
+     
+      media,
       whitelist: new UnorderedSet(`w:${name}`),
       claimed: new UnorderedSet(`c:${name}`),
     };
@@ -199,7 +195,7 @@ class BadgeContract {
     const metadata: TokenMetadata = {
       title: eventData.name,
       description: eventData.description,
-      media: "https://gateway.lighthouse.storage/ipfs/bafkreidybqjfxxhbfnkcsfn5yzhyyvv4dg4nbijao3w5wazlshixoyipyu",
+      media: eventData.media, // Get URL image from event data
       issued_at: near.blockTimestamp().toString(),
     };
 
